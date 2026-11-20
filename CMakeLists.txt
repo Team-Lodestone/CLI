@@ -30,4 +30,4 @@ target_link_libraries(Lodestone.CLI PUBLIC
         bio-cpp20
 )
 
-setupLinter(Lodestone.App)
+setupLinter(Lodestone.CLI)
