@@ -15,6 +15,7 @@ namespace LodestoneCLI::Commands {
         virtual ~ICommand() = default;
 
         virtual std::shared_ptr<CommandBuilder> registerCommand() = 0;
+
         virtual void execute() = 0;
     };
 }

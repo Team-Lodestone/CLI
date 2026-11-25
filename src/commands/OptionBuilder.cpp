@@ -38,6 +38,7 @@ LodestoneCLI::Commands::OptionBuilder &LodestoneCLI::Commands::OptionBuilder::is
     this->m_isRequired = isRequired;
     return *this;
 }
+
 //endregion
 
 //region Getters

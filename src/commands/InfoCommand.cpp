@@ -8,11 +8,11 @@ std::shared_ptr<LodestoneCLI::Commands::CommandBuilder> LodestoneCLI::Commands::
     auto command = CommandBuilder::create();
 
     command
-        ->setCommandName("info")
-        .setCommandDescription("Displays information about a given level/world")
-        .setCallback([this] {
-            execute();
-        });
+            ->setCommandName("info")
+            .setCommandDescription("Displays information about a given level/world")
+            .setCallback([this] {
+                execute();
+            });
 
     return command;
 }

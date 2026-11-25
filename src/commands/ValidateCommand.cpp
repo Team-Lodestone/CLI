@@ -8,11 +8,11 @@ std::shared_ptr<LodestoneCLI::Commands::CommandBuilder> LodestoneCLI::Commands::
     auto command = CommandBuilder::create();
 
     command
-        ->setCommandName("validate")
-        .setCommandDescription("Validates a world against the expected format/version")
-        .setCallback([this] {
-            execute();
-        });
+            ->setCommandName("validate")
+            .setCommandDescription("Validates a world against the expected format/version")
+            .setCallback([this] {
+                execute();
+            });
 
     return command;
 }

@@ -14,12 +14,11 @@
 #include "Lodestone.Core/Lodestone.h"
 #include "Lodestone.Core/loader/NativeExtensionLoader.h"
 
-int main(const int argc, char** argv)
-{
+int main(const int argc, char **argv) {
     CLI::App app{"Lodestone-CLI"};
     argv = app.ensure_utf8(argv);
 
-    auto* lodestone = lodestone::core::Lodestone::getInstance();
+    auto *lodestone = lodestone::core::Lodestone::getInstance();
     // std::print("== Loading extensions ==\n");
 
     lodestone::core::loader::NativeExtensionLoader l("extensions/", lodestone);
@@ -45,14 +44,13 @@ int main(const int argc, char** argv)
     // Parse and execute commands
     try {
         app.parse(argc, argv);
-    } catch (const CLI::ParseError& e) {
+    } catch (const CLI::ParseError &e) {
         return app.exit(e);
     }
 
     // No subcommand was entered
     // Display help information
-    if (app.get_subcommands().empty())
-    {
+    if (app.get_subcommands().empty()) {
         std::cout << app.help();
         return 0;
     }

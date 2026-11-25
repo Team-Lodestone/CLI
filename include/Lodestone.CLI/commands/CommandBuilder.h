@@ -29,10 +29,12 @@ namespace LodestoneCLI::Commands {
             this->m_callback = std::move(callback);
             return *this;
         }
+
         //endregion
 
         //region Getters
         std::string getCommandName();
+
         std::string getCommandDescription();
 
         std::function<void()> getCallback() {
@@ -41,6 +43,7 @@ namespace LodestoneCLI::Commands {
         //endregion
 
         void build(CLI::App *app);
+
     private:
         std::string m_commandName;
         std::string m_commandDescription;

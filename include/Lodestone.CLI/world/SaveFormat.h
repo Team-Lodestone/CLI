@@ -8,7 +8,6 @@
 #include "Lodestone.Common/registry/Identifier.h"
 
 namespace LodestoneCLI::World {
-
     enum class SaveType {
         Level,
         World
@@ -57,11 +56,10 @@ namespace LodestoneCLI::World {
                 .type = SaveType::World, .format = {"lodestone", "minecraft/java/io/world/mcregion"}
             }
         };
-
     } // namespace SaveFormats
 
-    inline const SaveFormatRange* getSaveFormat(const std::string_view version) {
-        for (const auto& format : SaveFormats::RANGES) {
+    inline const SaveFormatRange *getSaveFormat(const std::string_view version) {
+        for (const auto &format: SaveFormats::RANGES) {
             if (version >= format.first && version <= format.last) {
                 return &format;
             }
@@ -69,7 +67,6 @@ namespace LodestoneCLI::World {
 
         return nullptr;
     }
-
 } // namespace LodestoneCLI::World
 
 #endif // LODESTONE_CLI_SAVE_FORMAT_H

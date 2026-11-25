@@ -40,15 +40,15 @@ std::string LodestoneCLI::Commands::CommandBuilder::getCommandDescription() {
 //endregion
 
 void LodestoneCLI::Commands::CommandBuilder::build(CLI::App *app) {
-    auto* command =
-        app->add_subcommand(this->getCommandName(), this->getCommandDescription());
+    auto *command =
+            app->add_subcommand(this->getCommandName(), this->getCommandDescription());
 
-    for (const OptionBuilder& option : this->m_options) {
+    for (const OptionBuilder &option: this->m_options) {
         std::vector<std::string> aliases = option.getAliases();
 
         // Join aliases for CLI11
         // Otherwise, use option name as only name
-        CLI::Option* cli_option;
+        CLI::Option *cli_option;
         if (!aliases.empty()) {
             std::ostringstream oss;
             aliases.push_back("--" + option.getName());
@@ -70,7 +70,7 @@ void LodestoneCLI::Commands::CommandBuilder::build(CLI::App *app) {
             cli_option->required();
         }
 
-        for (const OptionRequirement& requirement : option.getRequirements()) {
+        for (const OptionRequirement &requirement: option.getRequirements()) {
             cli_option->check(requirement.toValidator());
         }
     }

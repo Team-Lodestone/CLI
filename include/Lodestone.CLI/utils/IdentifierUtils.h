@@ -13,7 +13,7 @@
 namespace LodestoneCLI::Utils {
     class IdentifierUtils {
     public:
-        static std::optional<lodestone::common::registry::Identifier> tryParse(const std::string& input) {
+        static std::optional<lodestone::common::registry::Identifier> tryParse(const std::string &input) {
             const auto separator = input.find(':');
 
             if (separator == std::string::npos)

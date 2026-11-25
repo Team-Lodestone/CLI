@@ -9,11 +9,10 @@
 #include "Lodestone.CLI/commands/ICommand.h"
 
 namespace LodestoneCLI::Commands {
-    class CommandRegistry
-    {
-        public:
-        template<typename T> void registerCommand()
-        {
+    class CommandRegistry {
+    public:
+        template<typename T>
+        void registerCommand() {
             static_assert(
                 std::is_base_of_v<ICommand, T>,
                 "Command must inherit from ICommand"
@@ -22,8 +21,8 @@ namespace LodestoneCLI::Commands {
             commands.push_back(std::make_unique<T>());
         }
 
-        void registerCommands(CLI::App& app) {
-            for (const auto& command : commands) {
+        void registerCommands(CLI::App &app) {
+            for (const auto &command: commands) {
                 auto builder = command->registerCommand();
 
                 builder->build(&app);
@@ -32,10 +31,10 @@ namespace LodestoneCLI::Commands {
             }
         }
 
-        private:
-        std::vector<std::unique_ptr<ICommand>> commands;
+    private:
+        std::vector<std::unique_ptr<ICommand> > commands;
 
-        std::vector<std::shared_ptr<CommandBuilder>> m_commandBuilders;
+        std::vector<std::shared_ptr<CommandBuilder> > m_commandBuilders;
     };
 }
 

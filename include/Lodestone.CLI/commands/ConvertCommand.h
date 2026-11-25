@@ -9,11 +9,12 @@
 #include "Lodestone.CLI/commands/ICommand.h"
 
 namespace LodestoneCLI::Commands {
-    class ConvertCommand : public ICommand
-    {
+    class ConvertCommand : public ICommand {
     public:
         std::shared_ptr<CommandBuilder> registerCommand() override;
+
         void execute() override;
+
     private:
         // Required parameters
         std::filesystem::path input_path;
