@@ -43,7 +43,11 @@ int main(const int argc, char** argv)
     //endregion
 
     // Parse and execute commands
-    CLI11_PARSE(app, argc, argv);
+    try {
+        app.parse(argc, argv);
+    } catch (const CLI::ParseError& e) {
+        return app.exit(e);
+    }
 
     // No subcommand was entered
     // Display help information

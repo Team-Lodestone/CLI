@@ -8,76 +8,112 @@
 
 #include <iostream>
 
+#include "Lodestone.CLI/commands/CommandBuilder.h"
 #include "Lodestone.CLI/utils/IdentifierUtils.h"
 #include "Lodestone.CLI/world/SaveFormat.h"
 #include "Lodestone.Conversion/io/options/fs/FilesystemPathOptions.h"
+#include "Lodestone.Conversion/io/options/versioned/VersionedOptions.h"
 #include "Lodestone.Conversion/registry/Registries.h"
 #include "Lodestone.Level/world/World.h"
 
-void LodestoneCLI::Commands::ConvertCommand::registerCommand(CLI::App &app)
+std::shared_ptr<LodestoneCLI::Commands::CommandBuilder> LodestoneCLI::Commands::ConvertCommand::registerCommand()
 {
-    auto* convert =
-    app.add_subcommand("convert", "Converts a level/world to another format or version");
+    const auto inputOption = OptionBuilder::create()
+        ->setOptionName("input")
+        .setOptionDescription("Level/World to be converted")
+        .addRequirement(OptionRequirements::EXISTING_FILE_OR_DIR)
+        .addAlias("-i")
+        .setCallback(input_path)
+        .isRequired(true)
+        .build();
 
-    convert->add_option("-i,--input", input_path, "World to be converted")->required()->check(CLI::ExistingPath);
+    const auto outputOption = OptionBuilder::create()
+        ->setOptionName("output")
+        .setOptionDescription("Converted level/world destination")
+        .addAlias("-o")
+        .setCallback(output_path)
+        .isRequired(true)
+        .build();
 
-    convert->add_option("-o,--output", output_path, "Converted world")->required();
+    const auto fromOption = OptionBuilder::create()
+        ->setOptionName("from")
+        .setOptionDescription("Source version")
+        .addAlias("-f")
+        .setCallback(m_fromVersion)
+        .isRequired(true)
+        .build();
 
-    convert->add_option("-f,--from", from_version, "Source version")
-        ->required();
+    const auto toOption = OptionBuilder::create()
+        ->setOptionName("to")
+        .setOptionDescription("Destination version")
+        .addAlias("-t")
+        .setCallback(m_toVersion)
+        .isRequired(true)
+        .build();
 
-    convert->add_option("-t,--to", to_version, "Destination version")
-        ->required();
+    // TODO: --io-from / --io-to options
 
-    convert->add_option("-v,--verbose", m_verbose, "Verbose output");
+    auto command = CommandBuilder::create();
 
-    convert->callback([this] {
-        execute();
-    });
+    command
+        ->setCommandName("convert")
+        .setCommandDescription("Converts a level/world to another format or version")
+        .addOption(inputOption)
+        .addOption(outputOption)
+        .addOption(fromOption)
+        .addOption(toOption)
+        .setCallback([this] {
+            execute();
+        });
+
+    return command;
 }
 
 void LodestoneCLI::Commands::ConvertCommand::execute()
 {
     const auto lodestone = lodestone::core::Lodestone::getInstance();
 
+    if (this->m_verbose)
+    {
+        LOG_INFO("Input:       " + input_path.string());
+        LOG_INFO("Output:      " + output_path.string());
+        LOG_INFO("From:        " + m_fromVersion);
+        LOG_INFO("To:          " + m_toVersion);
+    }
+
     //region Validate to/from versions
     const auto versionRegistry = lodestone->getVersionRegistry();
 
-    std::ranges::replace(from_version, '.', '_');
-    std::ranges::replace(to_version, '.', '_');
+    std::ranges::replace(m_fromVersion, '.', '_');
+    std::ranges::replace(m_toVersion, '.', '_');
 
-    const std::optional<lodestone::common::registry::Identifier> from = Utils::IdentifierUtils::tryParse(from_version);
+    const std::optional<lodestone::common::registry::Identifier> from = Utils::IdentifierUtils::tryParse(m_fromVersion);
     if (!from.has_value())
     {
-        throw std::runtime_error(from_version + " is not a correctly formatted version!");
+        LOG_ERROR(m_fromVersion + " is not a correctly formatted version!");
+        return;
     }
     if (versionRegistry.isValid(from.value()))
     {
-        throw std::runtime_error(from_version + " is not a valid version!");
+        LOG_ERROR(m_fromVersion + " is not a valid version!");
+        return;
     }
 
-    const std::optional<lodestone::common::registry::Identifier> to = Utils::IdentifierUtils::tryParse(to_version);
+    const std::optional<lodestone::common::registry::Identifier> to = Utils::IdentifierUtils::tryParse(m_toVersion);
     if (!to.has_value())
     {
-        throw std::runtime_error(to_version + " is not a correctly formatted version!");
+        LOG_ERROR(m_toVersion + " is not a correctly formatted version!");
+        return;
     }
     if (versionRegistry.isValid(to.value()))
     {
-        throw std::runtime_error(to_version + " is not a valid version!");
+        LOG_ERROR(m_toVersion + " is not a valid version!");
+        return;
     }
     //endregion
 
-    if (this->m_verbose)
-    {
-        std::cout << std::endl;
-        std::cout << "Input:       " << input_path.string() << std::endl;
-        std::cout << "Output:      " << output_path.string() << std::endl;
-        std::cout << "From:        " << from_version << std::endl;
-        std::cout << "To:          " << to_version << std::endl;
-    }
-
     //region Read world
-    const auto* fromSaveFormat = World::getSaveFormat(from_version);
+    const auto* fromSaveFormat = World::getSaveFormat(m_fromVersion);
 
     if (!fromSaveFormat) {
         throw std::runtime_error("Unsupported save format");
@@ -85,25 +121,25 @@ void LodestoneCLI::Commands::ConvertCommand::execute()
 
     std::unique_ptr<lodestone::level::world::World> fromWorld;
     if (fromSaveFormat->type == World::SaveType::Level) {
-        std::cout << "LEVEL!" << std::endl;
+       LOG_INFO("LEVEL!");
     } else {
-        const auto* inputIo = lodestone::conversion::registry::WorldIORegistry::getInstance().get(fromSaveFormat->format);
-
+        // const auto* inputIo = lodestone::conversion::registry::WorldIORegistry::getInstance().get(fromSaveFormat->format);
+        //
         // fromWorld = inputIo->read(
         //     minecraft::common::conversion::io::options::OptionPresets::CommonFilesystemOptions{
         //         lodestone::conversion::io::options::fs::FilesystemPathOptions{
         //             temp_dir
         //         },
-        //         conversion::io::options::versioned::VersionedOptions{
+        //         lodestone::conversion::io::options::versioned::VersionedOptions{
         //             minecraft::java::Version::b1_3
         //         }
         //     });
-        std::cout << "WORLD!" << std::endl;
+        // LOG_INFO("WORLD!");
     }
     //endregion
 
     //region Write world
-    const auto* toSaveFormat = World::getSaveFormat(to_version);
+    const auto* toSaveFormat = World::getSaveFormat(m_toVersion);
 
     if (!toSaveFormat) {
         throw std::runtime_error("Unsupported save format");

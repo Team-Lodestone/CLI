@@ -10,7 +10,7 @@
 namespace LodestoneCLI::Commands {
     class InfoCommand : public ICommand {
     public:
-        void registerCommand(CLI::App &app) override;
+        std::shared_ptr<CommandBuilder> registerCommand() override;
 
         void execute() override;
     };

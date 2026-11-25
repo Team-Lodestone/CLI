@@ -4,13 +4,17 @@
 
 #include "Lodestone.CLI/commands/ValidateCommand.h"
 
-void LodestoneCLI::Commands::ValidateCommand::registerCommand(CLI::App &app) {
-    auto* validate =
-        app.add_subcommand("validate", "Validates a world against the expected format/version");
+std::shared_ptr<LodestoneCLI::Commands::CommandBuilder> LodestoneCLI::Commands::ValidateCommand::registerCommand() {
+    auto command = CommandBuilder::create();
 
-    validate->callback([this] {
-        execute();
-    });
+    command
+        ->setCommandName("validate")
+        .setCommandDescription("Validates a world against the expected format/version")
+        .setCallback([this] {
+            execute();
+        });
+
+    return command;
 }
 
 void LodestoneCLI::Commands::ValidateCommand::execute() {

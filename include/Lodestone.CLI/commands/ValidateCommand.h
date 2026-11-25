@@ -5,12 +5,13 @@
 #ifndef LODESTONE_CLI_VALIDATE_COMMAND_H
 #define LODESTONE_CLI_VALIDATE_COMMAND_H
 
+#include "CommandBuilder.h"
 #include "Lodestone.CLI/commands/ICommand.h"
 
 namespace LodestoneCLI::Commands {
     class ValidateCommand : public ICommand {
     public:
-        void registerCommand(CLI::App &app) override;
+        std::shared_ptr<CommandBuilder> registerCommand() override;
 
         void execute() override;
     };

@@ -22,13 +22,20 @@ namespace LodestoneCLI::Commands {
             commands.push_back(std::make_unique<T>());
         }
 
-        void registerCommands(CLI::App& app) const {
-            for (const auto& command : commands)
-                command->registerCommand(app);
+        void registerCommands(CLI::App& app) {
+            for (const auto& command : commands) {
+                auto builder = command->registerCommand();
+
+                builder->build(&app);
+
+                m_commandBuilders.push_back(std::vector<std::shared_ptr<CommandBuilder> >::value_type(builder));
+            }
         }
 
         private:
         std::vector<std::unique_ptr<ICommand>> commands;
+
+        std::vector<std::shared_ptr<CommandBuilder>> m_commandBuilders;
     };
 }
 

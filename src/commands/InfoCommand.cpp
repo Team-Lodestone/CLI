@@ -4,13 +4,17 @@
 
 #include "Lodestone.CLI/commands/InfoCommand.h"
 
-void LodestoneCLI::Commands::InfoCommand::registerCommand(CLI::App &app) {
-    auto* info =
-        app.add_subcommand("info", "Displays information about a given level/world");
+std::shared_ptr<LodestoneCLI::Commands::CommandBuilder> LodestoneCLI::Commands::InfoCommand::registerCommand() {
+    auto command = CommandBuilder::create();
 
-    info->callback([this] {
-        execute();
-    });
+    command
+        ->setCommandName("info")
+        .setCommandDescription("Displays information about a given level/world")
+        .setCallback([this] {
+            execute();
+        });
+
+    return command;
 }
 
 void LodestoneCLI::Commands::InfoCommand::execute() {

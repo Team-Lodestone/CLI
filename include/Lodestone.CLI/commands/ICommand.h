@@ -7,14 +7,14 @@
 
 #pragma once
 
-#include <CLI11.hpp>
+#include "Lodestone.CLI/commands/CommandBuilder.h"
 
 namespace LodestoneCLI::Commands {
     class ICommand {
     public:
         virtual ~ICommand() = default;
 
-        virtual void registerCommand(CLI::App& app) = 0;
+        virtual std::shared_ptr<CommandBuilder> registerCommand() = 0;
         virtual void execute() = 0;
     };
 }
