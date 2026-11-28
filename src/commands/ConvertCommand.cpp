@@ -83,22 +83,28 @@ void LodestoneCLI::Commands::ConvertCommand::execute() {
     std::ranges::replace(m_fromVersion, '.', '_');
     std::ranges::replace(m_toVersion, '.', '_');
 
-    const std::optional<lodestone::common::registry::Identifier> from = Utils::IdentifierUtils::tryParse(m_fromVersion);
-    if (!from.has_value()) {
-        LOG_ERROR(m_fromVersion + " is not a correctly formatted version!");
+    for (auto &version: versionRegistry.getVersions("java")) {
+        LOG_INFO("Registered: java:" + version);
+    }
+    const auto separator = m_fromVersion.find(':');
+
+    if (separator == std::string::npos) {
+        LOG_ERROR("Invalid version format");
         return;
     }
-    if (versionRegistry.isValid(from.value())) {
+
+    const auto from_edition = m_fromVersion.substr(0, separator);
+    const auto from_versionName = m_fromVersion.substr(separator + 1);
+
+    if (!versionRegistry.isValid(from_edition, from_versionName)) {
         LOG_ERROR(m_fromVersion + " is not a valid version!");
         return;
     }
 
-    const std::optional<lodestone::common::registry::Identifier> to = Utils::IdentifierUtils::tryParse(m_toVersion);
-    if (!to.has_value()) {
-        LOG_ERROR(m_toVersion + " is not a correctly formatted version!");
-        return;
-    }
-    if (versionRegistry.isValid(to.value())) {
+    const auto to_edition = m_toVersion.substr(0, separator);
+    const auto to_versionName = m_toVersion.substr(separator + 1);
+
+    if (!versionRegistry.isValid(to_edition, to_versionName)) {
         LOG_ERROR(m_toVersion + " is not a valid version!");
         return;
     }
@@ -113,22 +119,41 @@ void LodestoneCLI::Commands::ConvertCommand::execute() {
 
     std::unique_ptr<lodestone::level::world::World> fromWorld;
     if (fromSaveFormat->type == World::SaveType::Level) {
-        LOG_INFO("LEVEL!");
+        LOG_ERROR("Levels are unsupported at this time!");
     } else {
-        // const auto* inputIo = lodestone::conversion::registry::WorldIORegistry::getInstance().get(fromSaveFormat->format);
-        //
-        // fromWorld = inputIo->read(
-        //     minecraft::common::conversion::io::options::OptionPresets::CommonFilesystemOptions{
-        //         lodestone::conversion::io::options::fs::FilesystemPathOptions{
-        //             temp_dir
-        //         },
-        //         lodestone::conversion::io::options::versioned::VersionedOptions{
-        //             minecraft::java::Version::b1_3
-        //         }
-        //     });
-        // LOG_INFO("WORLD!");
+        const auto edition = m_fromVersion.substr(0, m_fromVersion.find(':'));
+        const auto &registry = lodestone::conversion::registry::IODelegateRegistry::getInstance();
+        const std::string delegatePath = "minecraft/" + edition + "/io";
+
+        const lodestone::common::registry::Identifier worldIo{
+            "lodestone",
+            delegatePath.c_str()
+        };
+        const auto delegate = registry.get(worldIo);
+        const auto version = versionRegistry.getVersionId(from_edition, from_versionName);
+        if (!version) {
+            LOG_ERROR("Could not resolve input version ID");
+            return;
+        }
+
+        if (!delegate) {
+            LOG_ERROR("No IO delegate registered for edition: " + edition);
+            return;
+        }
+
+        fromWorld = delegate->readWorld(
+            lodestone::conversion::io::options::fs::FilesystemPathOptions{
+                input_path
+            },
+            lodestone::conversion::io::options::versioned::VersionedOptions{
+                version.value()
+            }
+        );
     }
     //endregion
+    if (fromWorld) {
+        LOG_INFO("Successfully read world!");
+    }
 
     //region Write world
     const auto *toSaveFormat = World::getSaveFormat(m_toVersion);
@@ -138,9 +163,38 @@ void LodestoneCLI::Commands::ConvertCommand::execute() {
     }
 
     if (toSaveFormat->type == World::SaveType::Level) {
-        std::cout << "LEVEL!" << std::endl;
+        LOG_ERROR("Levels are unsupported at this time!");
     } else {
-        std::cout << "WORLD!" << std::endl;
+        const auto edition = m_toVersion.substr(0, m_toVersion.find(':'));
+        const auto &registry = lodestone::conversion::registry::IODelegateRegistry::getInstance();
+        const std::string delegatePath = "minecraft/" + edition + "/io";
+
+        const lodestone::common::registry::Identifier worldIo{
+            "lodestone",
+            delegatePath.c_str()
+        };
+        const auto delegate = registry.get(worldIo);
+        const auto version = versionRegistry.getVersionId(to_edition, to_versionName);
+        if (!version) {
+            LOG_ERROR("Could not resolve input version ID");
+            return;
+        }
+
+        if (!delegate) {
+            LOG_ERROR("No IO delegate registered for edition: " + edition);
+            return;
+        }
+
+        // TODO: Add options
+        delegate->writeWorld(lodestone::conversion::io::options::fs::FilesystemPathOptions{
+                                 output_path
+                             },
+                             lodestone::conversion::io::options::versioned::VersionedOptions{
+                                 static_cast<int>(version.value())
+                             }, fromWorld);
+
+        LOG_INFO("Successfully wrote world!");
     }
+
     //endregion
 }
